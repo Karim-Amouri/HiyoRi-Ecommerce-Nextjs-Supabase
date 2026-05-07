@@ -11,12 +11,12 @@ export interface InputProps
 }
 
 const inputVariants = cva(
-  "flex h-10 w-full rounded-md px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex h-10 w-full rounded-md px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
         default:
-          "border border-input bg-background ring-offset-background placeholder:text-muted-foreground",
+          "border border-input aria-invalid:border-destructive bg-background ring-offset-background placeholder:text-muted-foreground",
         ghost:
           "ring-0 border-0 focus:border-0 focus:ring-offset-0 focus-visible:ring-0 bg-transparent focus:ring-0 focus-visible:border-0 ",
       },

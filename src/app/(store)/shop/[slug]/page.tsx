@@ -14,11 +14,11 @@ import {
   ProductCard,
   ProductImageShowcase,
 } from "@/features/products";
+import ProductDetailError from "@/features/products/components/ProductDetailError";
 import { AddToWishListButton } from "@/features/wishlists";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 type Props = {
   params: {
@@ -74,17 +74,31 @@ async function ProductDetailPage({ params }: Props) {
     productSlug: params.slug as string,
   });
 
-  if (!data || !data.productsCollection || !data.productsCollection.edges)
-    return notFound();
+  console.log("ProductDetailPageQuery", {
+    slug: params.slug,
+    hasData: !!data,
+    error: error ? error.message : null,
+    edges: data?.productsCollection?.edges?.length ?? 0,
+  });
+
+  if (error) {
+    return <ProductDetailError message={error.message} />;
+  }
+
+  const product = data?.productsCollection?.edges?.[0]?.node;
+
+  if (!product) {
+    return <ProductDetailError message="This product could not be found." />;
+  }
 
   const { id, name, description, price, commentsCollection, totalComments } =
-    data.productsCollection.edges[0].node;
+    product;
 
   return (
     <Shell>
       <div className="grid grid-cols-12 gap-x-8">
         <div className="space-y-8 relative col-span-12 md:col-span-7">
-          <ProductImageShowcase data={data.productsCollection.edges[0].node} />
+          <ProductImageShowcase data={product} />
         </div>
 
         <div className="col-span-12 md:col-span-5">

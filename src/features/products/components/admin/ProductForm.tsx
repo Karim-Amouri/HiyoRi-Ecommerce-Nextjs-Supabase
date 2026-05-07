@@ -11,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,17 +20,14 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import TagsField from "@/components/ui/tagsField";
+import { FieldInput } from "@/components/form/FieldInput";
 import { useToast } from "@/components/ui/use-toast";
 import { BadgeSelectField } from "@/features/cms";
 import { ImageDialog } from "@/features/medias";
-import {
-  InsertProducts,
-  SelectProducts,
-  products,
-} from "@/lib/supabase/schema";
+import { InsertProducts, SelectProducts } from "@/lib/supabase/schema";
+import { productInsertSchema } from "@/features/products/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@urql/next";
-import { createInsertSchema } from "drizzle-zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useTransition } from "react";
@@ -65,23 +61,22 @@ function ProductFrom({ product }: ProductsFormProps) {
   });
 
   const form = useForm<InsertProducts>({
-    resolver: zodResolver(createInsertSchema(products)),
+    resolver: zodResolver(productInsertSchema),
     defaultValues: { ...product },
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = form;
+  const { control, handleSubmit } = form;
 
   const onSubmit = handleSubmit(async (data: InsertProducts) => {
     startTransition(async () => {
       try {
-        product
+        const result = product
           ? await updateProductAction(product.id, data)
           : await createProductAction(data);
+
+        if (!result) {
+          throw new Error("Product save returned no result.");
+        }
 
         router.push("/admin/products");
         router.refresh();
@@ -91,7 +86,12 @@ function ProductFrom({ product }: ProductsFormProps) {
           description: `${data.name}`,
         });
       } catch (err) {
-        // console.log("unexpected Error Occured")
+        toast({
+          title: "Error",
+          description:
+            err instanceof Error ? err.message : "Unexpected Error occurred.",
+          variant: "destructive",
+        });
       }
     });
   });
@@ -105,43 +105,28 @@ function ProductFrom({ product }: ProductsFormProps) {
         onSubmit={onSubmit}
       >
         <div className="flex flex-col gap-y-5 max-w-[500px]">
-          <FormItem>
-            <FormLabel className="text-sm">Name*</FormLabel>
-            <FormControl>
-              <Input
-                aria-invalid={!!form.formState.errors.name}
-                placeholder="Type Product Name."
-                {...register("name")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FieldInput
+            control={control}
+            name="name"
+            label="Name*"
+            inputProps={{ placeholder: "Type Product Name." }}
+          />
 
-          <FormItem>
-            <FormLabel className="text-sm">Slug*</FormLabel>
-            <FormControl>
-              <Input
-                defaultValue={product?.slug}
-                aria-invalid={!!form.formState.errors.slug}
-                placeholder="Type Product slug."
-                {...register("slug")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FieldInput
+            control={control}
+            name="slug"
+            label="Slug*"
+            inputProps={{ placeholder: "Type Product slug." }}
+          />
 
-          <FormItem>
-            <FormLabel className="text-sm">Description*</FormLabel>
-            <FormControl>
-              <Input
-                defaultValue={product?.description || ""}
-                aria-invalid={!!form.formState.errors.description}
-                placeholder="Type a short description for the product.."
-                {...register("description")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FieldInput
+            control={control}
+            name="description"
+            label="Description*"
+            inputProps={{
+              placeholder: "Type a short description for the product..",
+            }}
+          />
 
           {/* <FormField
             control={form.control}
@@ -205,18 +190,12 @@ function ProductFrom({ product }: ProductsFormProps) {
 
           <BadgeSelectField name="badge" label={""} />
 
-          <FormItem>
-            <FormLabel className="text-sm">Rating*</FormLabel>
-            <FormControl>
-              <Input
-                defaultValue={product?.rating}
-                aria-invalid={!!form.formState.errors.rating}
-                placeholder="Rating (0-5)."
-                {...register("rating")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FieldInput
+            control={control}
+            name="rating"
+            label="Rating*"
+            inputProps={{ placeholder: "Rating (0-5)." }}
+          />
 
           <FormItem>
             <FormLabel className="text-sm">Tags</FormLabel>
@@ -226,18 +205,12 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormMessage />
           </FormItem>
 
-          <FormItem>
-            <FormLabel className="text-sm">Price*</FormLabel>
-            <FormControl>
-              <Input
-                defaultValue={product?.price}
-                aria-invalid={!!form.formState.errors.price}
-                placeholder="Price"
-                {...register("price")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FieldInput
+            control={control}
+            name="price"
+            label="Price*"
+            inputProps={{ placeholder: "Price" }}
+          />
 
           <FormField
             control={form.control}
