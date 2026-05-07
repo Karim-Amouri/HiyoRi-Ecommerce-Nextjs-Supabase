@@ -1,6 +1,7 @@
 "use client";
 import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { gql } from "@/gql";
 import { FileWithPreview } from "@/types";
 import { useQuery } from "@urql/next";
@@ -19,6 +20,7 @@ function UploadMediaContainer({
   defaultImageId,
 }: UploadMediaContainerProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [uploadingImages, setUploadingImages] = useState<FileWithPreview[]>([]);
   const [lastCursor, setLastCursor] = React.useState<string | undefined>(
     undefined,
@@ -57,17 +59,31 @@ function UploadMediaContainer({
         body: formData,
       });
 
-      const data = (await response.json()) as string[];
+      const payload = (await response.json()) as
+        | { uploaded?: Array<{ name: string; key: string }> }
+        | { message?: string };
 
-      if (data) {
+      if (!response.ok) {
+        toast({
+          title: "Upload failed",
+          description:
+            "message" in payload
+              ? payload.message || "The media upload failed."
+              : "The media upload failed.",
+        });
+        return;
+      }
+
+      if ("uploaded" in payload) {
         refetch({ requestPolicy: "network-only" });
-
-        setUploadingImages(
-          uploadingImages.filter((item) => data.includes(item.path)),
-        );
+        setUploadingImages([]);
       }
     } catch (error) {
-      // console.error("Error uploading files:", error)
+      toast({
+        title: "Upload failed",
+        description:
+          error instanceof Error ? error.message : "Unexpected upload error",
+      });
     }
   };
 

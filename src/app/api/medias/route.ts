@@ -7,7 +7,6 @@ import { medias } from "@/lib/supabase/schema";
 import { mediaSchema } from "@/validations/medias";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
@@ -40,42 +39,20 @@ export async function POST(request: NextRequest) {
         const s3Response = await uploadImage(params);
 
         if (s3Response) {
-          const insertedMedia = await db
-            .insert(medias)
-            .values({ alt: file.name, key: params.Key })
-            .returning();
+          await db.insert(medias).values({ alt: file.name, key: params.Key });
 
-          return file.path;
+          return { name: file.name, key: params.Key };
         }
       } catch (err) {
         statusCode = 400;
-        errorMessage = err.message;
-        return { message: err.message };
+        errorMessage =
+          err instanceof Error ? err.message : "Unexpected upload error";
+        return { message: errorMessage };
       }
     }),
   );
 
   return statusCode >= 300
     ? NextResponse.json({ message: errorMessage }, { status: statusCode })
-    : NextResponse.json(uploadResponse, { status: statusCode });
+    : NextResponse.json({ uploaded: uploadResponse }, { status: statusCode });
 }
-
-const fileToStream = async (file: File) => {
-  // Upload Image to S3 bucket
-  const mimeType = file.type;
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const imageBuffer = await sharp(buffer);
-  const metadata = await imageBuffer.metadata();
-
-  if (mimeType !== "image/gif")
-    return {
-      mimeType: "image/webp",
-      buffer: await sharp(buffer).webp().toBuffer(),
-    };
-
-  return {
-    mimeType: "image/gif",
-    buffer,
-  };
-};

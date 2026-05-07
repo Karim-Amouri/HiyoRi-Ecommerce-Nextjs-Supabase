@@ -31,7 +31,7 @@ const AdminCollectionsPageQuery = gql(/* GraphQL */ `
 async function collectionsPage({ searchParams }: AdminCollectionsPageProps) {
   const { data } = await getClient().query(AdminCollectionsPageQuery, {});
 
-  if (!data) return notFound();
+  //if (!data) return notFound();
 
   return (
     <AdminShell
@@ -46,7 +46,7 @@ async function collectionsPage({ searchParams }: AdminCollectionsPageProps) {
 
       <DataTable
         columns={CollectionsColumns}
-        data={data.collectionsCollection?.edges || []}
+        data={data?.collectionsCollection?.edges || []}
       />
     </AdminShell>
   );

@@ -74,7 +74,7 @@ export default async function Home() {
     user_id: currentUser?.id,
   });
 
-  if (data === null) return notFound();
+  if (data === null || !data) return notFound();
 
   return (
     <main>
@@ -107,7 +107,7 @@ function HeroSection() {
       <div className="relative w-full h-full md:h-[800px]">
         <Image
           alt="Furniture"
-          src="https://hiyori-backpack.s3.us-west-2.amazonaws.com/public/hero-image.jpg"
+          src="https://hotter-store.com/cdn/shop/files/Be_Hotter._5.png?v=1751458483&width=3840"
           width={1920}
           height={1200}
           priority={true}

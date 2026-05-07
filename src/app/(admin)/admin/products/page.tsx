@@ -31,7 +31,7 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
 
   const { data } = await getClient().query(AdminProductsPageQuery, {});
 
-  if (!data) return notFound();
+  //if (!data) return notFound();
 
   return (
     <AdminShell
@@ -47,7 +47,7 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
       <Suspense fallback={<DataTableSkeleton />}>
         <ProductsDataTable
           columns={ProductsColumns}
-          data={data.productsCollection?.edges || []}
+          data={data?.productsCollection?.edges || []}
         />
       </Suspense>
     </AdminShell>

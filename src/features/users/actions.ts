@@ -1,32 +1,30 @@
 "use server";
 
 import db from "@/lib/supabase/db";
-import createServerClient from "@/lib/supabase/server";
+import createClient from "@/lib/supabase/server";
 import { User } from "@supabase/supabase-js";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { profiles } from "../../lib/supabase/schema";
 import { AdminUserFormData } from "@/features/users/validations";
-import { env } from "@/env.mjs";
-import createClient from "@/lib/supabase/server";
 
 export const getCurrentUser = async () => {
   const cookieStore = cookies();
-  const supabase = createServerClient({ cookieStore });
+  const supabase = createClient({ cookieStore });
 
   const userResponse = await supabase.auth.getUser();
   return userResponse.data.user;
 };
+
 export const getCurrentUserSession = async () => {
   const cookieStore = cookies();
-  const supabase = createServerClient({ cookieStore });
+  const supabase = createClient({ cookieStore });
 
   const userResponse = await supabase.auth.getSession();
-
   return userResponse.data.session;
 };
 
-export const isAdmin = (currentUser: User | null) =>
+export const isAdmin = async (currentUser: User | null) =>
   currentUser?.app_metadata.isAdmin;
 
 export const getUser = async ({ userId }: { userId: string }) => {
@@ -35,9 +33,9 @@ export const getUser = async ({ userId }: { userId: string }) => {
     .admin;
 
   try {
-    const { data, error } = await adminAuthClient.getUserById(userId);
+    const { data } = await adminAuthClient.getUserById(userId);
     return data;
-  } catch (err) {
+  } catch {
     throw new Error("There is an error");
   }
 };
@@ -55,11 +53,11 @@ export const listUsers = async ({
 
   const {
     data: { users },
-    error,
   } = await adminAuthClient.listUsers({
     page,
     perPage,
   });
+
   return users;
 };
 
@@ -76,7 +74,10 @@ export const createUser = async ({
     const existedUser = await db.query.profiles.findFirst({
       where: eq(profiles.email, email),
     });
-    if (existedUser) throw new Error(`User with email ${email} is existed.`);
+
+    if (existedUser) {
+      throw new Error(`User with email ${email} is existed.`);
+    }
 
     const res = await adminAuthClient.createUser({
       email,
@@ -86,7 +87,7 @@ export const createUser = async ({
     });
 
     return res;
-  } catch (err) {
+  } catch {
     throw new Error("Unexpected error occured.");
   }
 };

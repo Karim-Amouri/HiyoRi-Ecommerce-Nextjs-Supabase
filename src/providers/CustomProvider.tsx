@@ -1,11 +1,24 @@
 "use client";
 
 import { SupabaseAuthProvider } from "./AuthProvider";
+import type { AuthUser, Session } from "@supabase/supabase-js";
 import UrqlProvider from "./UrqlProvider";
 
-export default function CustomProvider({ children }: React.PropsWithChildren) {
+type CustomProviderProps = React.PropsWithChildren<{
+  initialUser?: AuthUser | null;
+  initialSession?: Session | null;
+}>;
+
+export default function CustomProvider({
+  children,
+  initialUser,
+  initialSession,
+}: CustomProviderProps) {
   return (
-    <SupabaseAuthProvider>
+    <SupabaseAuthProvider
+      initialUser={initialUser}
+      initialSession={initialSession}
+    >
       <UrqlProvider>{children}</UrqlProvider>
     </SupabaseAuthProvider>
   );

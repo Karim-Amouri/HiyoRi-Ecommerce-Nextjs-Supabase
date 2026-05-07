@@ -25,13 +25,17 @@ export const useAuth = () => {
 
 interface SupabaseAuthProviderProps {
   children: React.ReactNode;
+  initialUser?: AuthUser | null;
+  initialSession?: Session | null;
 }
 
 export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   children,
+  initialUser = null,
+  initialSession = null,
 }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(initialUser);
+  const [session, setSession] = useState<Session | null>(initialSession);
   const removeAllCartStorage = useCartStore((s) => s.removeAllProducts);
   const setWishlist = useWishlistStore((s) => s.setWishlist);
   const { toast } = useToast();
